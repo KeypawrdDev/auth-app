@@ -5,6 +5,9 @@ from . import models, schemas, auth
 from .database import engine, SessionLocal
 from .schemas import UserLogin
 from .database import get_db
+from fastapi import WebSocket
+from .websocket import manager
+from fastapi import WebSocket, WebSocketDisconnect
 
 
 app = FastAPI()
@@ -17,12 +20,12 @@ def read_root():
     return {"message": "FastAPI with DB is working ✅"}
 
 @app.post("/register")
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
-    return auth.create_user(db=db, user=user)
+
+    return await auth.create_user(db=db, user=user)
 
 @app.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
@@ -37,4 +40,14 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 @app.get("/welcome")
 def protected_welcome(current_user: str = Depends(auth.get_current_user)):
     return {"message": f"Welcome back, {current_user} 🎉"}
+
+
+@app.websocket("/ws/notifications")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()  # keep connection alive
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
