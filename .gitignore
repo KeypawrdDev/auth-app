@@ -1,1 +1,22 @@
+# Ignore virtual environments
+backend/nooriam/
+backend/venv/
+backend/env/
+
+# Ignore .env files
 backend/.env
+frontend/.env
+
+# Node modules (React)
+frontend/node_modules/
+
+# Build artifacts
+frontend/build/
+frontend/dist/
+
+# System files
+.DS_Store
+*.log
+
+# VS Code config (optional)
+.vscode/
