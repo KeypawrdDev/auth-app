@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from . import models, schemas, auth
 from .database import engine, SessionLocal
@@ -8,9 +9,24 @@ from .database import get_db
 from fastapi import WebSocket
 from .websocket import manager
 from fastapi import WebSocket, WebSocketDisconnect
+from dotenv import load_dotenv
+import os 
 
+load_dotenv()  # 👈 Load variables from .env file
 
 app = FastAPI()
+origins = [
+    os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 models.Base.metadata.create_all(bind=engine)
 
