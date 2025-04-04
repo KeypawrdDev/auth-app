@@ -1,69 +1,55 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../utils/axios";
 
-const Register = () => {
+const Register: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-      const res = await axios.post("http://localhost:8000/register", {
-        email,
-        password,
-      });
-
-      console.log("✅ Registered:", res.data);
-      setMessage("🎉 Registration successful!");
-      setTimeout(() => navigate("/login"), 1500);
-    } catch (err: any) {
-      console.error("❌ Error registering:", err.response?.data || err.message);
-      setMessage(
-        err.response?.data?.detail || "Registration failed. Try a different email."
-      );
+      await api.post("/register", { email, password });
+      navigate("/login");
+    } catch (error: any) {
+      alert(error.response?.data?.detail || "Registration failed");
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", padding: "2rem" }}>
-      <h2>Register</h2>
+    <div style={{ maxWidth: "400px", margin: "3rem auto", padding: "2rem", border: "1px solid #ccc", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+      <h2 style={{ textAlign: "center" }}>Register</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "1rem" }}>
-          <label>Email</label>
+          <label htmlFor="email" style={{ display: "block", marginBottom: "0.5rem" }}>Email</label>
           <input
             type="email"
-            required
+            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ width: "100%", padding: "0.5rem" }}
+            required
+            style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
           />
         </div>
-
         <div style={{ marginBottom: "1rem" }}>
-          <label>Password</label>
+          <label htmlFor="password" style={{ display: "block", marginBottom: "0.5rem" }}>Password</label>
           <input
             type="password"
-            required
+            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: "0.5rem" }}
+            required
+            style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
           />
         </div>
-
-        <button type="submit" style={{ padding: "0.5rem 1rem" }}>
+        <button type="submit" style={{ width: "100%", padding: "0.75rem", backgroundColor: "#4caf50", color: "white", border: "none", borderRadius: "4px" }}>
           Register
         </button>
       </form>
-
-      {message && (
-        <div style={{ marginTop: "1rem", color: message.includes("🎉") ? "green" : "red" }}>
-          {message}
-        </div>
-      )}
+      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+        Already have an account? <Link to="/login">Login</Link>
+      </p>
     </div>
   );
 };
