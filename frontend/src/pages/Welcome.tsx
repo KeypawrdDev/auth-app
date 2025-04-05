@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"; // ✅ Use named import
-
-interface DecodedToken {
-  sub: string;
-  exp: number;
-}
+import api from "../utils/axios"; // uses token-aware Axios instance
 
 const Welcome = () => {
-  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [expired, setExpired] = useState(false);
   const navigate = useNavigate();
 
@@ -20,21 +15,17 @@ const Welcome = () => {
       return;
     }
 
-    try {
-      const decoded = jwtDecode<DecodedToken>(token); // ✅ Correct usage
-      const now = Math.floor(Date.now() / 1000);
-
-      if (decoded.exp < now) {
+    api
+      .get("/welcome")
+      .then((res) => {
+        setMessage(res.data.message); // e.g., "Welcome back, user@example.com!"
+      })
+      .catch((err) => {
+        console.error("Unauthorized or invalid token:", err);
         setExpired(true);
         localStorage.removeItem("token");
         setTimeout(() => navigate("/login"), 1500);
-      } else {
-        setEmail(decoded.sub);
-      }
-    } catch (err) {
-      console.error("Invalid token", err);
-      navigate("/login");
-    }
+      });
   }, [navigate]);
 
   const handleLogout = () => {
@@ -50,8 +41,11 @@ const Welcome = () => {
         <p style={{ color: "red" }}>🔐 Your session has expired. Redirecting...</p>
       ) : (
         <>
-          <p>🎉 Hello, <strong>{email}</strong>!</p>
-          <button onClick={handleLogout} style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}>
+          <p>{message}</p>
+          <button
+            onClick={handleLogout}
+            style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}
+          >
             Logout
           </button>
         </>

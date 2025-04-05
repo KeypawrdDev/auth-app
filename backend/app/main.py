@@ -10,7 +10,9 @@ from fastapi import WebSocket
 from .websocket import manager
 from fastapi import WebSocket, WebSocketDisconnect
 from dotenv import load_dotenv
-import os 
+import os
+from .auth import get_current_user  # ✅ import your JWT checker
+
 
 load_dotenv()  # 👈 Load variables from .env file
 
@@ -54,9 +56,8 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 
 
 @app.get("/welcome")
-def protected_welcome(current_user: str = Depends(auth.get_current_user)):
-    return {"message": f"Welcome back, {current_user} 🎉"}
-
+def welcome(current_user: models.User = Depends(get_current_user)):
+    return {"message": f"🎉 Welcome back, {current_user.email}!"}
 
 @app.websocket("/ws/notifications")
 async def websocket_endpoint(websocket: WebSocket):
