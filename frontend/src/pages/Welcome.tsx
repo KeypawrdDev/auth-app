@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../utils/axios"; // uses token-aware Axios instance
+import api from "../utils/axios";
+import { useNotifications } from "../hooks/useNotifications"; // ✅ only here
+import Toast from "../components/Toast";
 
 const Welcome = () => {
   const [message, setMessage] = useState("");
   const [expired, setExpired] = useState(false);
   const navigate = useNavigate();
 
+  const notification = useNotifications(); // ✅ socket only starts here
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    api
-      .get("/welcome")
-      .then((res) => {
-        setMessage(res.data.message); // e.g., "Welcome back, user@example.com!"
+    api.get("/welcome")
+      .then(res => {
+        setMessage(res.data.message);
       })
-      .catch((err) => {
-        console.error("Unauthorized or invalid token:", err);
-        setExpired(true);
+      .catch(() => {
         localStorage.removeItem("token");
+        setExpired(true);
         setTimeout(() => navigate("/login"), 1500);
       });
   }, [navigate]);
@@ -36,20 +31,17 @@ const Welcome = () => {
   return (
     <div style={{ maxWidth: "600px", margin: "auto", padding: "2rem" }}>
       <h2>Welcome Page</h2>
-
       {expired ? (
-        <p style={{ color: "red" }}>🔐 Your session has expired. Redirecting...</p>
+        <p style={{ color: "red" }}>🔐 Session expired. Redirecting...</p>
       ) : (
         <>
           <p>{message}</p>
-          <button
-            onClick={handleLogout}
-            style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}
-          >
+          <button onClick={handleLogout} style={{ marginTop: "1rem" }}>
             Logout
           </button>
         </>
       )}
+      {notification && <Toast message={notification} />}
     </div>
   );
 };
